@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class BannerController {
     public static void main(String[] args) {
-        System.out.println("猫");
+        System.out.println("你好啊，猫王");
 
     }
 }
