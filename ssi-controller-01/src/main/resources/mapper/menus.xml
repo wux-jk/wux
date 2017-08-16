@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"   
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<!-- sqlMap：映射标签
+	namespace：命名空间
+ -->
+<sqlMap namespace="menus">
+
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="userRequest" type="com.jk.pojo.UserRequest"/>
+	<typeAlias alias="userResponse" type="com.jk.pojo.UserReponse"/>
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="menusRequest" type="com.jk.pojo.menus.MenusRequest"/>
+	<typeAlias alias="menusResponse" type="com.jk.pojo.menus.MenusResponse"/>
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="roleRequest" type="com.jk.pojo.role.RoleRequest"/>
+	<typeAlias alias="roleResponse" type="com.jk.pojo.role.RoleResponse"/>
+	
+	<!-- 查询展示菜单列表 -->
+	<select id="selectMenuListJson" parameterClass="menusRequest" resultClass="menusResponse">
+		select   
+		m.t_id as "id",
+		m.t_name as "name",
+		m.t_url as "url",
+		m.t_pid as "pid",
+		m.t_type as "type",
+		m.t_paternal as "isParent"
+		from t_menus m
+		order by m.t_id
+	
+	</select>
+	
+	
+	<!-- 删除菜单的信息 -->
+	<delete id="deleteMenusInfo" parameterClass="menusRequest">
+		delete from t_menus where t_pid=#menuID# or t_id=#menuID#
+	</delete>
+	
+	<!-- 查询新增页面权限 一级列表 -->
+	<select id="selectFistMenuList" parameterClass="menusRequest" resultClass="menusResponse">
+		select m.t_id as "id",m.t_name as "name" 
+		
+		from t_menus m
+		where m.t_pid=0
+		order by m.t_id
+	</select>
+	
+	<insert id="insertMenus">
+		insert into t_menus
+		(t_id,t_name,t_url,t_pid,t_type,t_paternal)
+		values
+		(t_menus_seq.nextval,#menuName#,#url#,#pid#,#menuType#,#isParent#)
+		
+	</insert>
+
+	
+</sqlMap>

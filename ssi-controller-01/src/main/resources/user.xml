@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<users>
+	<user userId="1">
+		<userName>张三</userName>
+		<userPassword>123</userPassword>
+	</user>
+	
+	<user userId="2">
+		<userName>李四</userName>
+		<userPassword>123</userPassword>
+	</user>
+	
+	<user userId="3">
+		<userName>王五</userName>
+		<userPassword>123</userPassword>
+	</user>
+	
+	<user userId="4">
+		<userName>小刘</userName>
+		<userPassword>123</userPassword>
+	</user>
+</users>

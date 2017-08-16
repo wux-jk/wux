@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"   
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<!-- sqlMap：映射标签
+	namespace：命名空间
+ -->
+<sqlMap namespace="book">
+
+	<!-- 为类起别名，使用的时候比较方便 -->
+	<typeAlias alias="book" type="com.jk.pojo.book.Book"/>
+
+	<!-- 添加书籍 -->
+	<insert id="insertBook" parameterClass="book">
+		insert into t_books
+		(bookID,bookName,bookPrice,bookImg)
+		values
+		(HIBERNATE_SEQUENCE.nextval,#bookName#,#bookPrice#,#bookImg#)
+	</insert>
+	
+	<!-- 查询书籍列表 -->
+	<select id="selectBookList" resultClass="book">
+		select bookID as "bookID",
+		
+		bookName as "bookName",
+		bookPrice as bookPrice
+			
+		from t_books
+	</select>
+	
+	
+	<!-- 根据ID查询书籍-->
+	<select id="selectBookById" resultClass="book">
+		select  *
+		from t_books where bookID = #bookID#
+	</select>
+	
+	
+	<!-- 根据ID删除-->
+	<delete id="deleteBookById" parameterClass="int">
+		delete from  t_books where bookID = #bookID#
+	</delete>
+	
+	<!-- 根据ID修改-->
+	<update id="updateBookById" parameterClass="book">
+		update t_books set bookName = #bookName#,bookPrice = #bookPrice#,bookImg = #bookImg#   where bookID = #bookID#
+	</update>
+</sqlMap>

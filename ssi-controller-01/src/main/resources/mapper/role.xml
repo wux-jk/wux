@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"   
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<!-- sqlMap：映射标签
+	namespace：命名空间
+ -->
+<sqlMap namespace="role">
+
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="userRequest" type="com.jk.pojo.UserRequest"/>
+	<typeAlias alias="userResponse" type="com.jk.pojo.UserReponse"/>
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="menusRequest" type="com.jk.pojo.menus.MenusRequest"/>
+	<typeAlias alias="menusResponse" type="com.jk.pojo.menus.MenusResponse"/>
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="roleRequest" type="com.jk.pojo.role.RoleRequest"/>
+	<typeAlias alias="roleResponse" type="com.jk.pojo.role.RoleResponse"/>
+	
+	
+	<!-- 查询角色列表 并分页 -->
+	<select id="selectRoleList" parameterClass="roleRequest" resultClass="roleResponse">
+		select u2.* from (
+			select u1.*, rownum as rm from (
+				select role_id as "roleID",
+					role_name as "roleName",
+					role_desc as "roleDesc"
+				from t_roles r
+			) u1
+			where rownum <![CDATA[<=]]> #endPos#
+		) u2
+		where u2.rm >= #startPos#
+	</select>
+	
+	<!-- 查询角色总条数 -->
+	<select id="selectRoleCount" parameterClass="roleRequest" resultClass="int">
+		select count(1) from t_roles
+	</select>
+	
+	<!-- 查询角色菜单信息  -->
+	<select id="selectRoleMenuListJson" resultClass="menusResponse" parameterClass="menusRequest" >
+	select m1.t_id as "id",
+	m1.t_name as "name",
+	m1.t_url as "url",
+	m1.t_type as "type",
+	m1.t_pid as "pid",
+	nvl2(m2.t_role_id,1,0 )as "checked",
+	t_paternal as "isParent"
+	from t_menus m1 
+	left join (select m.t_menus_id,m.t_role_id from t_r_m_mid m where m.t_role_id = #roleID#)m2
+	on m1.t_id = m2.t_menus_id
+		order by m1.t_id
+	</select>
+	
+	<!--新增角色信息  -->
+	<insert id="insertRole" parameterClass="roleRequest">
+			insert into t_roles
+		(role_id, role_name, role_desc)
+		values
+		(t_roles_seq.nextval, #roleName#,#roleDesc#)
+	
+	</insert>
+	
+	
+	
+	
+	<!-- 根据角色id删除角色所拥有的菜单 -->
+	<delete id="deleteRoleMenusById" parameterClass="menusRequest">
+		delete from t_r_m_mid
+		where t_role_id =#roleID#
+	</delete>
+	<!-- 添加角色角色的菜单表  角色菜单中间表-->
+	<insert id="insertRoleMenu">
+		insert into t_r_m_mid
+		(t_id,t_role_id,t_menus_id)
+		values
+		(t_r_m_mid_seq.nextval,#roleID#,#menuID#)
+	</insert>
+	
+	<!-- 删除角色的信息 -->
+	<delete id="deleteroleInfo" parameterClass="roleRequest">
+		delete from t_roles where role_id=#roleID#
+	
+	</delete>
+	
+</sqlMap>

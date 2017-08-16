@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"   
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<!-- sqlMap：映射标签
+	namespace：命名空间
+ -->
+<sqlMap namespace="user">
+
+	<!-- 为类起别名，使用的时候比较方便 -->
+	<typeAlias alias="user" type="com.jk.pojo.User"/>
+	
+	<typeAlias alias="upload" type="com.jk.pojo.upload.Upload"/>
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="userRequest" type="com.jk.pojo.UserRequest"/>
+	<typeAlias alias="userResponse" type="com.jk.pojo.UserReponse"/>
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="menusRequest" type="com.jk.pojo.menus.MenusRequest"/>
+	<typeAlias alias="menusResponse" type="com.jk.pojo.menus.MenusResponse"/>
+	
+	<!-- 为数据类型起别名 -->
+	<typeAlias alias="roleRequest" type="com.jk.pojo.role.RoleRequest"/>
+	<typeAlias alias="roleResponse" type="com.jk.pojo.role.RoleResponse"/>
+	
+	<!-- 查询用户名，密码 -->
+	<select id="login" parameterClass="userRequest" resultClass="userResponse">
+		select t_id as "userID",
+			t_userName as "userName",
+			t_pwd as "userPassword",
+			t_loginFailNum as "loginFailNum",
+			(sysdate - t_loginFailDate) * 24 * 60 * 60 * 1000 as "t_loginFailDate"
+		from t_users
+		where t_userName = #userName#
+	</select>
+	
+	<!-- 修改用户登录的失败的次数 -->
+	<update id="loginFailNum">
+		update t_users 
+		set t_loginFailNum = #loginFailNum#,
+		t_loginFailDate = sysdate
+		where t_userName = #userName#
+	
+	</update>
+	
+	<!-- 查询用户的信息 -->
+	<!-- <select id="selectUserListJson" resultClass="user">
+		select t_id as "userID",
+			t_userName as "userName",
+			t_name as "usersName",
+			t_sex as "userSex",
+			t_age as "userAge",
+			t_Time as "userTime"
+			
+			from t_users
+	
+	</select> -->
+	<!-- 查询用户信息 并分页 -->
+	<select id="selectUserList" parameterClass="userRequest" resultClass="userResponse">
+		select u2.* from (
+			select u1.*, rownum as rm from (
+				select t_id as "userID",
+					t_userName as "userName",
+					t_pwd as "userPassword",t_name as "usersName",t_sex as "userSex",t_age as "userAge",t_photo as "userPhoto"
+				from t_users u
+			) u1
+			where rownum <![CDATA[<=]]> #endPos#
+		) u2
+		where u2.rm >= #startPos#
+		
+	</select>
+	
+	<!-- 查询用户总条数 -->
+	<select id="selectUserCount" parameterClass="userRequest" resultClass="int">
+		select count(1) from t_users
+	</select>
+	
+	<!-- 查询用户角色信息 -->
+	<select id="selectUserRoleListJson" resultClass="roleResponse" parameterClass="roleRequest" >
+	select r.role_id as "id",r.role_name as "name",nvl2(m1.t_roles_id,1,0 )as "checked" 
+	from t_roles r left join 
+	(select m.t_roles_id from t_middle m where m.t_user_id = #userID#)m1
+	on r.role_id = m1.t_roles_id
+		order by r.role_id
+	</select>
+	
+	<!-- 删除用户所有的角色  中间表-->
+	<delete id="deleteAllRolesByUserID">
+		delete from t_middle
+		where t_user_id = #userID#
+	</delete>
+	<!-- 添加用户用户用户的角色  是 用户角色中间表-->
+	<insert id="insertUserRole">
+		insert into t_middle
+		(t_id, t_user_id, t_roles_id)
+		values
+		(t_middle_seq.nextval, #userID#, #roleID#)
+	</insert>
+	
+	<!--新增用户信息  -->
+	<insert id="insertUser" parameterClass="userRequest">
+			insert into t_users
+		(t_id, t_userName, t_pwd,t_name,t_sex,t_age,t_photo)
+		values
+		(t_users_seq.nextval, #userName#, #userPassword#,#usersName#,#userSex#,#userAge#,#userPhoto#)
+	
+	</insert>
+	
+	<!-- 删除用户信息 -->
+	<delete id="deleteUserInfo" parameterClass="userRequest">
+	
+		delete from  t_users where t_id = #userID#
+	</delete>
+	
+	<!-- 查询主页菜单树列表 -->
+ <select id="selectTreeListJson" parameterClass="menusRequest" resultClass="java.util.HashMap">
+		select m3.t_id as "id",
+		       m3.t_name as "text",
+		       m3.t_url as "href",
+		       m3.t_pid as "pid"
+		from t_menus m3
+		right join (
+		            select distinct t_menus_id from t_r_m_mid m1
+		            right join (select t_roles_id from t_middle where t_user_id = #userID#) m2
+		            on m1.t_role_id = m2.t_roles_id) m4
+		on m3.t_id = m4.t_menus_id 
+		where m3.t_pid = #pid#
+		and m3.t_type=0
+		order by m3.t_id
+	</select>
+	
+	<!-- 查询用户权限列表 -->                                            
+	<select id="selectMenusListJson" parameterClass="menusRequest" resultClass="menusResponse">
+		select distinct m.t_id as "id", 
+	      m.t_name as "name", 
+	      m.t_url as "url", 
+	      m.t_pid as "pid", 
+	      m.t_type as "type", 
+	      nvl2(m1.t_role_id, 1, 0) as "checked",
+	      m.t_paternal as "isParent" 
+	    from t_menus m
+	    left join (select m2.t_role_id, m2.t_menus_id from t_r_m_mid m2) m1
+	    on m.t_id = m1.t_menus_id
+	    right join (select t_roles_id from t_middle where t_user_id = #userID#) m3
+	    on m1.t_role_id = m3.t_roles_id
+	    order by m.t_id
+	</select>
+	
+	<!-- 根据指纹查询 -->
+	<select id="selectUploadPhoto" parameterClass="upload" resultClass="upload">
+		select t_mdfile as "madFile",t_imgName as "imgName"
+		from t_upload where t_mdfile = #madFile#
+	</select>	
+	
+	<!--新增文件图片信息  -->
+	<insert id="insertUploadFile" parameterClass="upload">
+		insert into t_upload
+		(t_id, t_mdfile, t_imgName)
+		values
+		(upload.nextval, #madFile# , #imgName#)
+	
+	</insert>
+	
+	<!-- 出巡ID  修改做回显 -->
+	<select id="selectUserById" parameterClass="userRequest" resultClass="userResponse">
+		select t_id as "userID",
+			   t_userName as "userName",
+			   t_pwd as "userPassword",
+			   t_name as "usersName",
+			   t_sex as "userSex",
+			   t_age as "userAge",
+			   t_photo as "userPhoto"
+			  from t_users where t_id=#userID#
+	
+	</select>
+	
+	<!-- 修改用户信息 -->
+	<update id="updateUserInfo" parameterClass="userRequest">
+		update t_users 
+		set t_userName = #userName#,
+			   t_pwd = #userPassword#,
+			   t_name = #usersName#,
+			   t_sex = #userSex#,
+			   t_age = #userAge#,
+			   t_photo = #userPhoto#
+		where t_id =#userID#	   
+	</update>
+
+</sqlMap>
