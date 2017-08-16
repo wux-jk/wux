@@ -21,4 +21,5 @@
 	<sqlMap resource="mapper/book.xml"/>
 	<sqlMap resource="mapper/role.xml"/>
 	<sqlMap resource="mapper/menus.xml"/>
+	<sqlMap resource="mapper/notice.xml"/>
 </sqlMapConfig>
